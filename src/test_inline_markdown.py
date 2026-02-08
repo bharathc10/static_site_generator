@@ -23,5 +23,17 @@ class TestInlineMarkdown(unittest.TestCase):
         node2 = split_nodes_delimiter([node1], "**", TextType.BOLD)
         self.assertEqual(node0, node2)
 
+    def test_extract_markdown_images_1(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_images_2(self):
+        matches = extract_markdown_images(
+            "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        )
+        self.assertListEqual([("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")], matches)
+
 if __name__ == "__main__":
     unittest.main()
