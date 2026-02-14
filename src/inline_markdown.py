@@ -11,10 +11,10 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             if len(parts) % 2 == 0:
                 raise Exception("Error: delimiter not closed")
             for i in range(len(parts)):
+                if parts[i] == "":
+                    continue
                 if i % 2 == 0:
-                    if parts[i] == "":
-                        continue
-                    new_nodes.append(TextNode(parts[i], node.text_type))
+                    new_nodes.append(TextNode(parts[i], TextType.TEXT))
                 else:
                     new_nodes.append(TextNode(parts[i], text_type))
     return new_nodes
@@ -96,3 +96,25 @@ def split_nodes_link(old_nodes):
             new_nodes.append(TextNode(text, TextType.TEXT))
 
     return new_nodes
+
+def text_to_textnodes(text):
+    # Start with single TEXT node containing full input
+    nodes = [TextNode(text, TextType.TEXT)]
+
+    # Code: `code` -> pairs of `
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    
+    # Order matters: simple delimiters first, then images/links
+    # Bold: **text** -> pairs of **
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    
+    # Italic: _italic_ -> pairs of _
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    
+    # Images: ![alt](url)
+    nodes = split_nodes_image(nodes)
+    
+    # Links: [text](url) - note negative lookbehind in regex to exclude images
+    nodes = split_nodes_link(nodes)
+    
+    return nodes

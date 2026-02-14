@@ -223,6 +223,86 @@ class TestSplitLinks(unittest.TestCase):
             split_nodes_link(nodes),
         )
 
+class TestTextToTextnodes(unittest.TestCase):
+    def test_example_output(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        result = text_to_textnodes(text)
+        self.assertEqual(expected, result)  # Verified True[code:1]
+
+    def test_mixed_delimiters_multiple(self):
+        text = "Test **bold** _italic_ `code` and **nested** styles"
+        result = text_to_textnodes(text)
+        expected = [
+            TextNode("Test ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" ", TextType.TEXT),
+            TextNode("code", TextType.CODE),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("nested", TextType.BOLD),
+            TextNode(" styles", TextType.TEXT),
+        ]
+        self.assertEqual(expected, result)
+
+    def test_links_and_images_together(self):
+        text = "See [link](https://ex.com) and ![img](img.png) [another](https://ex2.com)"
+        expected = [
+            TextNode("See ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://ex.com"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("img", TextType.IMAGE, "img.png"),
+            TextNode(" ", TextType.TEXT),
+            TextNode("another", TextType.LINK, "https://ex2.com"),
+        ]
+        self.assertEqual(expected, text_to_textnodes(text))
+
+    def test_unclosed_delimiter_raises(self):
+        with self.assertRaises(Exception):
+            text_to_textnodes("Unclosed **bold")
+
+    def test_empty_string(self):
+        self.assertEqual([], text_to_textnodes(""))
+
+    def test_plain_text(self):
+        text = "No markdown here"
+        self.assertEqual([TextNode(text, TextType.TEXT)], text_to_textnodes(text))
+
+    def test_adjacent_elements(self):
+        text = "**b**_i_`c`![i1](u1)![i2](u2)[l1](v1)[l2](v2)"
+        expected = [
+            TextNode("b", TextType.BOLD),
+            TextNode("i", TextType.ITALIC),
+            TextNode("c", TextType.CODE),
+            TextNode("i1", TextType.IMAGE, "u1"),
+            TextNode("i2", TextType.IMAGE, "u2"),
+            TextNode("l1", TextType.LINK, "v1"),
+            TextNode("l2", TextType.LINK, "v2"),
+        ]
+        self.assertEqual(expected, text_to_textnodes(text))
+
+    def test_code_before_bold(self):
+        text = "`code` **bold**"
+        # Your order (code first) correctly splits both
+        expected = [
+            TextNode("code", TextType.CODE),
+            TextNode(" ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+        ]
+        self.assertEqual(expected, text_to_textnodes(text))
+
 if __name__ == "__main__":
     unittest.main()
 
