@@ -1,7 +1,12 @@
 from textnode import TextNode, TextType
+from copystatic import *
 
 def main():
-    textNode = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
-    print(textNode)
+    if os.path.exists("public"):
+        shutil.rmtree("public")
 
-main()
+    os.mkdir("public")
+    copystatic("static", "public")
+
+if __name__ == "__main__":
+    main()
