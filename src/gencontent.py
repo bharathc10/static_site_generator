@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from markdown_blocks import *
 
 def extract_title(markdown):
@@ -29,4 +30,22 @@ def generate_page(from_path, template_path, dest_path):
 
     with open(dest_path, 'w', encoding='utf-8') as f_dest:
         f_dest.write(template_content)
-        
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    if not os.path.exists(dest_dir_path):
+        os.makedirs(dest_dir_path)
+    
+    for file in os.listdir(dir_path_content):
+        if file.startswith('.'):
+            continue
+
+        content_path = os.path.join(dir_path_content, file)
+        dst_path = os.path.join(dest_dir_path, file)
+
+        if os.path.isfile(content_path):
+            if file.endswith(".md"):
+                html_dst_path = Path(dst_path).with_suffix(".html")
+                generate_page(content_path, template_path, html_dst_path)
+            
+        else:
+            generate_pages_recursive(content_path, template_path, dst_path)
